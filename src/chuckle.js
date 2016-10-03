@@ -156,9 +156,9 @@
    */
   function scanElement(el) {
     // get the element attributes
-    var name = el.getAttribute('c-endpoint');
-    var val = el.getAttribute('c-val');
-    var interval = el.getAttribute('c-interval');
+    var name = el.getAttribute('data-c-endpoint');
+    var val = el.getAttribute('data-c-val');
+    var interval = el.getAttribute('data-c-interval');
 
     // process endpoint
     if (name !== null) {
