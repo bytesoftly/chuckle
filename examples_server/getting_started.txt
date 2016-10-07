@@ -1,5 +1,7 @@
 To start the examples server you will require node.js and NPM.
 
+0. Open a terminal to this directory
+
 1. First install dependencies with:
 npm install
 
