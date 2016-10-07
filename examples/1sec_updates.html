@@ -21,7 +21,7 @@
     <script>
 
     // add an endpoint to load bitcoin data (using defaults of GET and no query data)
-    chuckle.addEndpoint('bitcoinPrice', 'https://api.coindesk.com/v1/bpi/currentprice.json', { format: 'json' });
+    chuckle.addEndpoint('bitcoinPrice', { url: 'api/bitcoin.json', format: 'json' });
 
     // turn logging on (open up the console to have a look)
     chuckle.setVerbose(true);
@@ -30,7 +30,7 @@
 
     <style>
       body {
-        background-color: #77cef4;
+        text-align: center;
         padding: 15px;
       }
     </style>
