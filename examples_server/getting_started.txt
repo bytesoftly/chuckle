@@ -1,0 +1,9 @@
+To start the examples server you will require node.js and NPM.
+
+1. First install dependencies with:
+npm install
+
+2. Start the examples server with:
+node app.js
+
+3. Open a browser to http://localhost:3000/ and explore!

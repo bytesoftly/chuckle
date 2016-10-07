@@ -86,14 +86,24 @@
     if (verbose)
       log('Updating endpoint ' + name);
 
+    // overwrite data field with serialised form data if possible
+    var data = endpoint.data;
+    if (endpoint.form) {
+      var formData = $(endpoint.form).serialize();
+      if (length(formData) > 0) {
+        data = formData;
+        log('Using data serialised from form (rather than data field)');
+      }
+    }
+
     // perform the ajax update or a json update
     if (endpoint.format == null) {
       $.ajax({
         url: endpoint.url,
         method: endpoint.method,
-        data: endpoint.data,
+        data: data,
         success: function(c) {
-          updateEndpointElements(c, endpoint);
+          endpoint.middleware(c, endpoint, updateEndpointElements);
         },
         complete: function () {
           if (!forceOneOff) {
@@ -107,7 +117,7 @@
         method: endpoint.method,
         data: endpoint.data,
         success: function(c) {
-          updateEndpointElements(c, endpoint);
+          endpoint.middleware(c, endpoint, updateEndpointElements);
         },
         complete: function () {
           if (!forceOneOff) {
@@ -212,26 +222,50 @@
    * add - Adds a named endpoint
    *
    * @param  {String} name short name of endpoint, used for reference in DOM
-   * @param  {String} url url of the endpoint
-   * @param  {JSON} options can contain method, format and data. Only supported format (other than plain text, default) currently 'json'
+   * @param  {JSON} options can contain url, method, format, middleware function and data. Only supported format (other than plain text, default) currently 'json'
    * @return {undefined}
    */
-  chuckle.addEndpoint = function(name, url, options) {
-    // process optional arguments
-    var method = 'GET';
-    var data = {};
-    var format = null;
-    var form = null;
+  chuckle.addEndpoint = function(name, options) {
+    // check we have options
+    if (options === undefined) {
+      throw 'Options must be specified (see docs for usage)';
+    }
 
-    if (options !== undefined) {
-        method = options.method || method;
-        data = options.data || data;
-        format = options.format || format;
+    // process options
+    var method = options.method || 'GET';
+    var data = options.data || {};
+    var format = options.format || null;
+    var form = options.form || null;
+    var url = options.url || null;
+    var middleware = options.middleware || (function (c, endpoint, next) { next(c, endpoint); });
+
+    // validate url
+    // todo: change validation for custom endpoints
+    if (!url && !form) {
+      throw 'url or form field required to endpoint';
+    }
+
+    // extract url and method from form if url empty
+    if (!url) {
+      url = $(form).attr('action');
+      method = $(form).attr('action') || method;
+      if (url === undefined) {
+        throw 'Failed to extract url from form (either url must be specified or action attribute in form)'
+      }
+      log('Extracted url and method (GET if not present) from form');
     }
 
     // format is case insensitive
     if (format) {
       format = format.toLowerCase();
+    }
+
+    // validate format
+    if (format) {
+      var supportedFormats = ['json'];
+      if (supportedFormats.indexOf(format) < 0) {
+        throw 'Unsupported format specified, must be one of: ' + supportedFormats.join(', ');
+      }
     }
 
     // check if the name already exists (throw an error if so)
@@ -241,11 +275,13 @@
 
     // add the endpoint
     endpoints[name] = {
+      name: name,               // endpoint name (stored here for convenient access from middleware)
       url: url,                 // url of the endpoint
       method: method,           // method of the endpoint e.g. GET
       data: data,               // data to be passed as a query string or in headers etc. depending on method
-      format: format,             // format
-      last_value: null,         // last value retreived from the endpoint
+      form: form,               // form selector
+      middleware: middleware,   // middleware function (singular!) for data preprocessing (before rendering)
+      format: format,           // format
       min_update_interval: -1,  // minimum update interval for pollin the endpoint
       els: [],                  // elements associated with the endpoint
       el_vals: []               // term to evaluate for content to set element with
