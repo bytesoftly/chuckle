@@ -12,6 +12,9 @@
   // indexed array for speed (as this array will be regularly cycled through)
   var endpoints = [];
 
+  // global event handlers
+  var globalHandlers = {};
+
   // whether or not logging is enabled
   var verbose = false;
 
@@ -104,11 +107,37 @@
         data: data,
         success: function(c) {
           endpoint.middleware(c, endpoint, updateEndpointElements);
+          if (endpoint.success) {
+            callHandlerSafe(endpoint.success, c);
+          }
+
+          // show status elements
+          setStatusElements(endpoint, true);
         },
         complete: function () {
           if (!forceOneOff) {
             scheduleUpdateEndpoint(name);
           }
+        },
+        error: function (jqxhr, textStatus, error) {
+          if (verbose) {
+            console.error('chuckle: Failed to update endpoint' + error)
+          }
+
+          // retry if one off specified - keep going until a success
+          if (forceOneOff || endpoint.min_update_interval == -1) {
+            setTimeout(function () { updateEndpoint(name, true); }, 200);
+          }
+
+          // call error handlers to deal with loading error
+          var errorMessage = 'Failed to load endpoint: ' + error.toString();
+          callHandlers(globalHandlers['error'], errorMessage);
+          if (endpoint.error) {
+            callHandlerSafe(endpoint.error, errorMessage);
+          }
+
+          // show status elements
+          setStatusElements(endpoint, false);
         }
       });
     } else if (endpoint.format == 'json') {
@@ -118,11 +147,37 @@
         data: endpoint.data,
         success: function(c) {
           endpoint.middleware(c, endpoint, updateEndpointElements);
+          if (endpoint.success) {
+            callHandlerSafe(endpoint.success, c);
+          }
+
+          // show status elements
+          setStatusElements(endpoint, true);
         },
         complete: function () {
           if (!forceOneOff) {
             scheduleUpdateEndpoint(name);
           }
+        },
+        error: function (jqxhr, textStatus, error) {
+          if (verbose) {
+            console.error('chuckle: Failed to update endpoint: ' + error);
+          }
+
+          // retry if one off specified - keep going until a success
+          if (forceOneOff || endpoint.min_update_interval == -1) {
+            setTimeout(function () { updateEndpoint(name, true); }, 200);
+          }
+
+          // call error handlers to deal with loading error
+          var errorMessage = 'Failed to load endpoint: ' + error.toString();
+          callHandlers(globalHandlers['error'], errorMessage);
+          if (endpoint.error) {
+            callHandlerSafe(endpoint.error, errorMessage);
+          }
+
+          // show status elements
+          setStatusElements(endpoint, false);
         }
       });
     }
@@ -158,6 +213,23 @@
     }
   }
 
+  function setStatusElements(endpoint, success) {
+    for (var i = 0; i < endpoint.success_els.length; i++) {
+      if (success) {
+        $(endpoint.error_els[i]).hide();
+      } else {
+        $(endpoint.error_els[i]).fadeIn();
+      }
+    }
+    for (var i = 0; i < endpoint.error_els.length; i++) {
+      if (success) {
+        $(endpoint.success_els[i]).hide();
+      } else {
+        $(endpoint.success_els[i]).fadeIn();
+      }
+    }
+  }
+
   /**
    * scanElement - Scans one element for chuckle tags. This function
    * must be performant.
@@ -169,9 +241,47 @@
     var name = el.getAttribute('data-c-endpoint');
     var val = el.getAttribute('data-c-val');
     var interval = el.getAttribute('data-c-interval');
+    var formEndpoint = el.getAttribute('data-c-make-endpoint');
+    var formEndpointFormat = el.getAttribute('data-c-format');
+    var error = el.getAttribute('data-c-error');
+    var success = el.getAttribute('data-c-success');
 
-    // process endpoint
-    if (name !== null) {
+    // check if we have a form endpoint to add
+    if (formEndpoint !== null) {
+      var url = el.getAttribute('action');
+      var method = el.getAttribute('method');
+      var data = $(el).serialize();
+
+      // validate the endpoint options but continue as usual if not valid
+      if (url !== null) {
+        if (method !== null) {
+          log('Adding endpoint from form ' + formEndpoint);
+
+          // add the endpoint (may fail, log error but continue)
+          try {
+              chuckle.addEndpoint(formEndpoint, {
+                url: url,
+                method: method,
+                data: data,
+                format: formEndpointFormat
+              });
+          } catch(err) {
+            console.error('chuckle: Failed to add endpoint from form: ' + err + ' (ignoring)');
+          }
+        }
+      }
+    }
+
+    // check if this element is a pop message for error/success
+    if (error) {
+      if (!(el in endpoints[name].error_els)) {
+        endpoints[name].error_els.push(el);
+      }
+    } else if (success) {
+      if (!(el in endpoints[name].success_els)) {
+        endpoints[name].success_els.push(el);
+      }
+    } else if (name !== null) {
       // find the endpoint, check it's known
       if (name in endpoints) {
         // check the element is registered in the endpoint structure, if so it
@@ -216,6 +326,33 @@
     }
   }
 
+  /**
+   * callErrorHandlers - Calls all global error handlers
+   *
+   * @param  {type} message Message to pass to handlers
+   * @return {undefined}
+   */
+  function callHandlers(handlerList, message) {
+    for (var i = 0; i < handlerList.length; i++) {
+      callHandlerSafe(handlerList[i], message);
+    }
+  }
+
+  /**
+   * callHandlerSafe - Calls a custom handler safely
+   *
+   * @param  {type} handler Callback function to execute
+   * @param  {type} arg     Single argument to pass to handler
+   * @return {undefined}
+   */
+  function callHandlerSafe(handler, arg) {
+    try {
+      handler(arg);
+    } catch (err) {
+      console.error('chuckle: An error occurred calling a custom handler: ' + err.toString());
+    }
+  }
+
   /* public */
 
   /**
@@ -238,6 +375,8 @@
     var form = options.form || null;
     var url = options.url || null;
     var middleware = options.middleware || (function (c, endpoint, next) { next(c, endpoint); });
+    var success = options.success || null;
+    var error = options.error || null;
 
     // validate url
     // todo: change validation for custom endpoints
@@ -284,7 +423,11 @@
       format: format,           // format
       min_update_interval: -1,  // minimum update interval for pollin the endpoint
       els: [],                  // elements associated with the endpoint
-      el_vals: []               // term to evaluate for content to set element with
+      el_vals: [],              // term to evaluate for content to set element with
+      error_handler: error,     // error handlers to be called on failure of endpoint load
+      success_handler: success, // success handlers to be called on successful load
+      error_els: [],            // list of elements to show on error
+      success_els: []           // list of elements to show on success
     };
   }
 
@@ -342,6 +485,23 @@
    */
   chuckle.setVerbose = function (enabled) {
     verbose = enabled;
+  }
+
+
+  /**
+   * chuckle - Adds a chuckle global event handler
+   *
+   * @param  {type} name    Name of the event to subscribe to
+   * @param  {type} handler Handler callback function
+   * @return {undefined}
+   */
+  chuckle.on = function (name, handler) {
+    name = name.toLowerCase();
+    if (name in handlers) {
+      handlers[name].push(handler);
+    } else {
+      handlers[name] = [handler];
+    }
   }
 
   // run init function on library load

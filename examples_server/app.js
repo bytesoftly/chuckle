@@ -1,12 +1,14 @@
 var express = require('express');
 var app = express();
 var requestify = require('requestify');
+require('log-timestamp');
 
 var bitcoin = '';
 
 // init routes
 
 app.get('/api/bitcoin.json', function (req, res) {
+  console.log('Bitcoin request made')
   res.send(bitcoin);
 });
 

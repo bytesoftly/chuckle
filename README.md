@@ -8,6 +8,10 @@ Features:
 - Regular polling (with data-c-interval attribute)
 - Asynchronous form submission
 - Middleware (function to transform data before rendering)
+- No-JS endpoint creation with form tags (currently requires createEndpoint(...) to create endpoint from form)
+- Success handling elements (per endpoint)
+- Code error handlers (per endpoint and global)
+- Error and success handling elements (per endpoint)
 
 Requirements:
 - jQuery (2 or 3)
@@ -18,14 +22,14 @@ To Test:
 - Form submission (with and without tags, methods and data)
 - Rescanning page with refresh()
 - jQuery 2 support
+- Global and endpoint specific success and error handlers
+- Endpoint specific element error and success handlers
 
 Coming soon:
+- Global success/error event handlers
 - Loader elements
 - Error handling elements (per endpoint and global)
-- Success handling elements (per endpoint)
-- Code error handlers (per endpoint and global)
 - Disable element(s) while loading
-- No-JS endpoint creation with form tags (currently requires createEndpoint(...) to create endpoint from form)
 - Trigger tag for starting endpoint update (data-c-trigger='endpointName', data-c-trigger-* specifies event name). This is shorthand, same thing could be achieved with for example onclick="chuckle.updateEndpoint('endpointName');"
 
 - Custom endpoint loaders (for non http:// requests - e.g. for UIs build in electron with custom data loading)
