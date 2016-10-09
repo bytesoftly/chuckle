@@ -25,6 +25,9 @@ To Test:
 - Global and endpoint specific success and error handlers
 - Endpoint specific element error and success handlers
 
+Todo:
+- Fix interval updates not working
+
 Coming soon:
 - Global success/error event handlers
 - Loader elements

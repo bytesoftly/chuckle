@@ -13,7 +13,9 @@
   var endpoints = [];
 
   // global event handlers
-  var globalHandlers = {};
+  var globalHandlers = {
+    error: []
+  };
 
   // whether or not logging is enabled
   var verbose = false;
