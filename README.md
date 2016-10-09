@@ -25,13 +25,9 @@ To Test:
 - Global and endpoint specific success and error handlers
 - Endpoint specific element error and success handlers
 
-Todo:
-- Fix interval updates not working
-
 Coming soon:
-- Global success/error event handlers
 - Loader elements
-- Error handling elements (per endpoint and global)
+- Error handling elements (global)
 - Disable element(s) while loading
 - Trigger tag for starting endpoint update (data-c-trigger='endpointName', data-c-trigger-* specifies event name). This is shorthand, same thing could be achieved with for example onclick="chuckle.updateEndpoint('endpointName');"
 

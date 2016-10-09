@@ -429,7 +429,9 @@
       error_handler: error,     // error handlers to be called on failure of endpoint load
       success_handler: success, // success handlers to be called on successful load
       error_els: [],            // list of elements to show on error
-      success_els: []           // list of elements to show on success
+      success_els: [],          // list of elements to show on success
+      loader_els: [],           // elements to show whilst loading
+      disable_els: []           // elements to disable during load
     };
   }
 
