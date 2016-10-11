@@ -104,6 +104,9 @@
       }
     }
 
+    // show loader elements
+    setLoaderElements(endpoint, true);
+
     // perform the ajax update or a json update
     if (endpoint.format == null) {
       $.ajax({
@@ -123,6 +126,9 @@
           if (!forceOneOff) {
             scheduleUpdateEndpoint(name);
           }
+
+          // hide loader elements
+          setLoaderElements(endpoint, false);
         },
         error: function (jqxhr, textStatus, error) {
           if (verbose) {
@@ -163,6 +169,9 @@
           if (!forceOneOff) {
             scheduleUpdateEndpoint(name);
           }
+
+          // hide loader elements
+          setLoaderElements(endpoint, false);
         },
         error: function (jqxhr, textStatus, error) {
           if (verbose) {
@@ -186,8 +195,6 @@
         }
       });
     }
-
-     // TODO: Add error case and tags
   }
 
   function scheduleUpdateEndpoint(name) {
@@ -218,19 +225,58 @@
     }
   }
 
+  function setLoaderElements(endpoint, showing) {
+    // check whether or not element should be shown or hidden to show loading
+    for (var i = 0; i < endpoint.loader_els.length; i++) {
+      if (showing) {
+        if (fadingOn) {
+          $(endpoint.loader_els[idx]).fadeIn();
+        } else {
+          $(endpoint.loader_els[idx]).show();
+        }
+      } else {
+        if (fadingOn) {
+          $(endpoint.loader_els[idx]).fadeOut();
+        } else {
+          $(endpoint.loader_els[idx]).hide();
+        }
+      }
+    }
+
+    // check whether elements should be disabled due to endpoint loading (or
+    // finished and so enabled again)
+    for (var i = 0; i < endpoint.load_disabled_els.length; i++) {
+      if (showing) {
+        $(endpoint.load_disabled_els).prop('disabled', true);
+      } else {
+        // don't disable (enable) because loaders not showing (loading has
+        // finished)
+        $(endpoint.load_disabled_els).prop('disabled', false);
+      }
+    }
+  }
+
   function setStatusElements(endpoint, success) {
     for (var i = 0; i < endpoint.success_els.length; i++) {
       if (success) {
         $(endpoint.error_els[i]).hide();
       } else {
-        $(endpoint.error_els[i]).fadeIn();
+        if (fadingOn) {
+          $(endpoint.error_els[i]).fadeIn();
+        } else {
+          $(endpoint.error_els[i]).show();
+        }
       }
     }
     for (var i = 0; i < endpoint.error_els.length; i++) {
       if (success) {
         $(endpoint.success_els[i]).hide();
       } else {
-        $(endpoint.success_els[i]).fadeIn();
+        if (fadingOn) {
+          $(endpoint.success_els[i]).fadeIn();
+        } else {
+          $(endpoint.success_els[i]).show();
+        }
       }
     }
   }
@@ -250,7 +296,8 @@
     var formEndpointFormat = el.getAttribute('data-c-format');
     var error = el.getAttribute('data-c-error');
     var success = el.getAttribute('data-c-success');
-    var loading = el.getAttribute('data-c-loading');
+    var loader = el.getAttribute('data-c-loader');
+    var loadDisabled = el.getAttribute('data-c-load-disabled');
 
     // check if we have a form endpoint to add
     if (formEndpoint !== null) {
@@ -278,45 +325,55 @@
       }
     }
 
-    // check if this element is a pop message for error/success/loading before
-    // looking to render it
-    if (error) {
-      if (!(el in endpoints[name].error_els)) {
-        endpoints[name].error_els.push(el);
-      }
-    } else if (success) {
-      if (!(el in endpoints[name].success_els)) {
-        endpoints[name].success_els.push(el);
-      }
-    } else if (loader) {
-      if (!(el in endpoints[name].loader_els)) {
-        endpoints[name].loader_els.push(el);
-      }
-    } else if (name !== null) {
-      // find the endpoint, check it's known
+    // everything here onwards needs an endpoint name to continue - so check for
+    // one!
+    if (name) {
       if (name in endpoints) {
-        // check the element is registered in the endpoint structure, if so it
-        // has already been processed and so can be ignored
-        if (endpoints[name].els.indexOf(el) == -1) {
-          // check the element has a val tag (if not default to all the data
-          // coming back from the endpoint safely escaped to prevent accidental
-          // rendering of html)
-          if (val === null) {
-            val = 'chuckle.makeSafe(c)';
+        // check if the element should be disabled whilst the endpoint is loading
+        if (loadDisabled) {
+          if (!(el in endpoints[name].load_disabled_els)) {
+            endpoints[name].load_disabled_els.push(el);
           }
+        }
 
-          // add the element and it's val term to numerically indexed lists
-          // (again for performance)
-          endpoints[name].els.push(el);
-          endpoints[name].el_vals.push(val);
+        // check if this element is a pop message for error/success/loading before
+        // looking to render it
+        if (error) {
+          if (!(el in endpoints[name].error_els)) {
+            endpoints[name].error_els.push(el);
+          }
+        } else if (success) {
+          if (!(el in endpoints[name].success_els)) {
+            endpoints[name].success_els.push(el);
+          }
+        } else if (loader) {
+          if (!(el in endpoints[name].loader_els)) {
+            endpoints[name].loader_els.push(el);
+          }
+        } else {
+          // check the element is registered in the endpoint structure, if so it
+          // has already been processed and so can be ignored
+          if (!(el in endpoints[name].els)) {
+            // check the element has a val tag (if not default to all the data
+            // coming back from the endpoint safely escaped to prevent accidental
+            // rendering of html)
+            if (val === null) {
+              val = 'chuckle.makeSafe(c)';
+            }
 
-          // check whether the element's update interval is more demanding than
-          // the previous shortest
-          if (interval !== null) {
-            interval = parseFloat(interval);
-            if (!isNaN(interval)) {
-              if (interval < endpoints[name].min_update_interval || endpoints[name].min_update_interval < 0) {
-                endpoints[name].min_update_interval = interval;
+            // add the element and it's val term to numerically indexed lists
+            // (again for performance)
+            endpoints[name].els.push(el);
+            endpoints[name].el_vals.push(val);
+
+            // check whether the element's update interval is more demanding than
+            // the previous shortest
+            if (interval !== null) {
+              interval = parseFloat(interval);
+              if (!isNaN(interval)) {
+                if (interval < endpoints[name].min_update_interval || endpoints[name].min_update_interval < 0) {
+                  endpoints[name].min_update_interval = interval;
+                }
               }
             }
           }
@@ -440,7 +497,7 @@
       error_els: [],            // list of elements to show on error
       success_els: [],          // list of elements to show on success
       loader_els: [],           // elements to show whilst loading
-      disable_els: []           // elements to disable during load
+      load_disabled_els: []           // elements to disable during load
     };
   }
 
@@ -517,6 +574,13 @@
     }
   }
 
+
+  /**
+   * chuckle - Enable or disable loader/error/success element fading animations
+   *
+   * @param  {Bool} on Whether or not to enable fading
+   * @return {undefined}
+   */
   chuckle.setFade = function(on) {
     fadingOn = on;
   }
