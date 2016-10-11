@@ -197,6 +197,14 @@
     }
   }
 
+
+  /**
+   * scheduleUpdateEndpoint - Schedules an update of an endpoint in the future.
+   * Used to run updates in timed loops.
+   *
+   * @param  {String} name Name of the endpoint to update
+   * @return {undefined}
+   */
   function scheduleUpdateEndpoint(name) {
     var interval = endpoints[name].min_update_interval;
     // check whether the update should be one-shot or if another should be
@@ -212,6 +220,15 @@
     }
   }
 
+
+  /**
+   * updateEndpointElements - Renders elements using endpoint results
+   *
+   * @param  {Object} c        Endpoint response content
+   * @param  {Object} endpoint Endpoint update applies to (exposed to user code
+   *                            in c-data-val tag)
+   * @return {undefined}
+   */
   function updateEndpointElements(c, endpoint) {
     // perform the data setting carefully, logging errors to the console but
     // continuing the page render
@@ -225,6 +242,13 @@
     }
   }
 
+  /**
+   * setLoaderElements - Shows/hides loader elements and disables elements specified to do so during endpoint load
+   *
+   * @param  {Object} endpoint Endpoint object (either just loaded or started to)
+   * @param  {type} showing  Whether or not to show loaders (and disable specific elements)
+   * @return {undefined}
+   */
   function setLoaderElements(endpoint, showing) {
     // check whether or not element should be shown or hidden to show loading
     for (var i = 0; i < endpoint.loader_els.length; i++) {
@@ -256,6 +280,14 @@
     }
   }
 
+
+  /**
+   * setStatusElements - Shows/hides success/error elements for and endpoint
+   *
+   * @param  {Object} endpoint Endpoint object to process
+   * @param  {Bool} success  Whether or not the endpoint load succeeded
+   * @return {undefined}
+   */
   function setStatusElements(endpoint, success) {
     for (var i = 0; i < endpoint.success_els.length; i++) {
       if (success) {
