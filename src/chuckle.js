@@ -20,6 +20,9 @@
   // whether or not logging is enabled
   var verbose = false;
 
+  // whether or not to enable fading of loader/success/error elements
+  var fadingOn = false;
+
   /**
    * init - Performs initialisation after DOM is ready
    * Contains jQuery.
@@ -247,6 +250,7 @@
     var formEndpointFormat = el.getAttribute('data-c-format');
     var error = el.getAttribute('data-c-error');
     var success = el.getAttribute('data-c-success');
+    var loading = el.getAttribute('data-c-loading');
 
     // check if we have a form endpoint to add
     if (formEndpoint !== null) {
@@ -274,7 +278,8 @@
       }
     }
 
-    // check if this element is a pop message for error/success
+    // check if this element is a pop message for error/success/loading before
+    // looking to render it
     if (error) {
       if (!(el in endpoints[name].error_els)) {
         endpoints[name].error_els.push(el);
@@ -282,6 +287,10 @@
     } else if (success) {
       if (!(el in endpoints[name].success_els)) {
         endpoints[name].success_els.push(el);
+      }
+    } else if (loader) {
+      if (!(el in endpoints[name].loader_els)) {
+        endpoints[name].loader_els.push(el);
       }
     } else if (name !== null) {
       // find the endpoint, check it's known
@@ -506,6 +515,10 @@
     } else {
       handlers[name] = [handler];
     }
+  }
+
+  chuckle.setFade = function(on) {
+    fadingOn = on;
   }
 
   // run init function on library load
