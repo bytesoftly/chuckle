@@ -12,6 +12,8 @@ Features:
 - Success handling elements (per endpoint)
 - Code error handlers (per endpoint and global)
 - Error and success handling elements (per endpoint)
+- Loader elements (per endpoint)
+- Disable element(s) while loading
 
 Requirements:
 - jQuery (2 or 3)
@@ -24,16 +26,18 @@ To Test:
 - jQuery 2 support
 - Global and endpoint specific success and error handlers
 - Endpoint specific element error and success handlers
+- Fading on/off switch
+- Loader elements
+- Disabling of elements during endpoint load
 
 Coming soon:
-- Loader elements
-- Error handling elements (global)
-- Disable element(s) while loading
-- Trigger tag for starting endpoint update (data-c-trigger='endpointName', data-c-trigger-* specifies event name). This is shorthand, same thing could be achieved with for example onclick="chuckle.updateEndpoint('endpointName');"
-
+- Show hidden/hide showing elements on endpoint load
 - Custom endpoint loaders (for non http:// requests - e.g. for UIs build in electron with custom data loading)
+- More examples
+- Documentation
 
 Coming eventually:
+- Trigger tag for starting endpoint update (data-c-trigger='endpointName', data-c-trigger-* specifies event name). This is shorthand, same thing could be achieved with for example onclick="chuckle.updateEndpoint('endpointName');"
 - Websocket support (JSON over a websocket, updating on data receive)
 - Unit testing
 - bower and npm packages

@@ -529,7 +529,7 @@
       error_els: [],            // list of elements to show on error
       success_els: [],          // list of elements to show on success
       loader_els: [],           // elements to show whilst loading
-      load_disabled_els: []           // elements to disable during load
+      load_disabled_els: []     // elements to disable during load
     };
   }
 

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Loaders | chuckle.js</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.4/css/bootstrap.min.css" integrity="sha384-2hfp1SzUoho7/TsGGGDaFdsuuDL0LX2hnUp6VkX3CUQ2K4K+xjboZdsXyp4oUHZj" crossorigin="anonymous">
+
+    <!-- LOOK HERE: Make sure to include jQuery before chuckle (since it's a dependency) -->
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+    <script src="../src/chuckle.js"></script>
+
+    <!-- LOOK HERE: Defining endpoint(s) to be referenced in DOM tags -->
+    <script>
+
+    // add json endpoint
+    chuckle.addEndpoint('slowLoad', { url: '/api/slow_load.json', format: 'json'})
+
+    // turn logging on (open up the console to have a look)
+    chuckle.setVerbose(true);
+
+    // wait for DOM ready (jQuery shorthand)
+    $(function () {
+      // add a JS event handler to the button
+      $('#updateButton').click(function () {
+        // LOOK HERE: Triggering an endpoint update
+        chuckle.updateEndpoint('bitcoinPrice');
+      });
+    });
+
+    </script>
+
+    <style>
+      body {
+        text-align: center;
+        padding: 15px;
+      }
+    </style>
+
+  <body>
+    <h2>Loaders</h2>
+    <!-- LOOK HERE: A loader element that appears and disappears on start/finish -->
+    <div data-c-endpoint='slowLoad' data-c-loader>
+      <span>todo: find loading gif</span> Loading
+    </div>
+    <br />
+    <h6>The meaning of life is: <span data-c-endpoint='slowLoad' data-c-val='c.meaning_of_life'>...</span> (<span data-c-endpoint='slowLoad' data-c-val='c.certainty'>...</span> certainty)</h6>
+    <br />
+    <button class='btn btn-large' id='updateButton'>Load something slow</button>
+  </body>
+</html>
